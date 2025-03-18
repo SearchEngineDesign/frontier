@@ -3,13 +3,13 @@
 #include "utils/vector.h"
 // #include "utils/HashTable.h"
 #include "utils/ParsedUrl.h"
-// #include "utils/string.h"
-#include <string>
+#include "utils/string.h"
+// #include <string>
 
 #include <queue>
 
 // using utils::vector;
-using std::string;
+using utils::string;
 
 
 // Data Structure that abstracts random K access to a queue of URLs

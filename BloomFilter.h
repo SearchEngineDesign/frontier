@@ -1,9 +1,7 @@
 #ifndef BLOOMFILTER_H
 #define BLOOMFILTER_H
 
-#include <vector>
 #include <cmath>
-#include <string>
 #include <string.h>
 #include <openssl/md5.h>
 
@@ -27,7 +25,7 @@ class Bloomfilter
 
          }
 
-      void insert( const std::string &s)
+      void insert( const string &s)
          {
          // Hash the string into two unique hashes.
          const auto hashes = hash(s);
@@ -42,7 +40,7 @@ class Bloomfilter
 
 
 
-      bool contains( const std::string &s )
+      bool contains( const string &s )
          {
          // Hash the string into two unqiue hashes.
 
@@ -66,7 +64,7 @@ class Bloomfilter
 
       std::vector<bool> bits; 
 
-      std::pair<uint64_t, uint64_t> hash( const std::string &datum )
+      std::pair<uint64_t, uint64_t> hash( const string &datum )
          {
          //Use MD5 to hash the string into one 128 bit hash, and split into 2 hashes.
         

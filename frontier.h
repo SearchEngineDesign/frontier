@@ -5,13 +5,13 @@
 
 #include "ReaderWriterLock.h"
 #include <pthread.h>
-#include "frontier/UrlQueue.h"
+#include "UrlQueue.h"
 
 
 class ThreadSafeFrontier {
 
     private:
-        // std::queue<std::string> frontier_queue;
+        // std::queue<string> frontier_queue;
         UrlQueue frontier_queue; 
         Bloomfilter bloom_filter;
 
@@ -26,7 +26,7 @@ class ThreadSafeFrontier {
             // rw_lock = ReaderWriterLock();
         }
 
-        void insert( const std::string &s ) {
+        void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 
                 
@@ -39,7 +39,7 @@ class ThreadSafeFrontier {
 
         }
 
-        std::string getNextURLorWait() {
+        string getNextURLorWait() {
             {
                 WithWriteLock wl(rw_lock);
 
@@ -48,9 +48,9 @@ class ThreadSafeFrontier {
                     pthread_cond_wait(&cv, &rw_lock.write_lock); // Wait for a URL to be available
                 }
 
-                // std::string url = frontier_queue.front();
+                // string url = frontier_queue.front();
                 // frontier_queue.pop();
-                std::string url = frontier_queue.getNextUrl();
+                string url = frontier_queue.getNextUrl();
                 return url;
             }
         }

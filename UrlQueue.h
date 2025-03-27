@@ -1,26 +1,20 @@
 #pragma once
 
-#include "utils/vector.h"
-// #include "utils/HashTable.h"
-#include "utils/ParsedUrl.h"
-#include "utils/string.h"
-// #include <string>
+#include "../utils/vector.h"
+#include "../utils/ParsedUrl.h"
+#include "../utils/string.h"
 
 #include <queue>
-
-// using utils::vector;
-using utils::string;
-
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
 
     private:
-        utils::vector<string> urls;
+        vector<string> urls;
         // HashTable<int, int> index_map;
 
         //? CAN THIS BE A VECTOR ?
-        std::queue<std::string> urlPool;
+        std::queue<string> urlPool;
 
     
         void fillUrlPool() {
@@ -33,7 +27,7 @@ class UrlQueue {
             for (int i = 0; i < k; ++i) {
                 // select a random index
                 const unsigned int randomIndex = rand() % urls.size();
-                std::string selectedUrl = urls[randomIndex];
+                string selectedUrl = urls[randomIndex];
                 urlPool.push(selectedUrl);
 
                 // swap the selected url with the last url in the vector
@@ -44,17 +38,17 @@ class UrlQueue {
 
     public:
 
-        static const size_t DEFAULT_POOL_SIZE = 10;
+        const size_t DEFAULT_POOL_SIZE = 10;
 
         UrlQueue() : urls(), urlPool() {
             
          }
 
-        void addUrl(const std::string &url) {
-            urls.pushBack(url);
+        void addUrl(const string &url) {
+            urls.push_back(url);
         }
 
-        std::string getNextUrl() {
+        string getNextUrl() {
 
             // while (urlPool.empty() and urls.empty()) {
                 // wait
@@ -68,7 +62,7 @@ class UrlQueue {
                 fillUrlPool();
             }
 
-            std::string nextUrl = urlPool.front();
+            string nextUrl = urlPool.front();
             urlPool.pop();
             return nextUrl;
         }

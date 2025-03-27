@@ -5,7 +5,7 @@
 
 #include "ReaderWriterLock.h"
 #include <pthread.h>
-#include "frontier/UrlQueue.h"
+#include "UrlQueue.h"
 
 
 class ThreadSafeFrontier {
@@ -26,7 +26,7 @@ class ThreadSafeFrontier {
             // rw_lock = ReaderWriterLock();
         }
 
-        void insert( const std::string &s ) {
+        void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 
                 
@@ -39,7 +39,7 @@ class ThreadSafeFrontier {
 
         }
 
-        std::string getNextURLorWait() {
+        string getNextURLorWait() {
             {
                 WithWriteLock wl(rw_lock);
 
@@ -50,7 +50,7 @@ class ThreadSafeFrontier {
 
                 // std::string url = frontier_queue.front();
                 // frontier_queue.pop();
-                std::string url = frontier_queue.getNextUrl();
+                string url = frontier_queue.getNextUrl();
                 return url;
             }
         }

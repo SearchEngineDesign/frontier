@@ -2,9 +2,9 @@
 
 #include <queue>
 
-#include "../utils/include/vector.h"
+#include "../utils/vector.h"
 #include "../utils/ParsedUrl.h"
-#include "../utils/include/string.h"
+#include "../utils/string.h"
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
@@ -38,7 +38,7 @@ class UrlQueue {
 
     public:
 
-        static const size_t DEFAULT_POOL_SIZE = 10;
+        const size_t DEFAULT_POOL_SIZE = 10;
 
         UrlQueue() : urls(), urlPool() {
             

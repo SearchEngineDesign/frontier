@@ -31,9 +31,9 @@ class ThreadSafeFrontier {
                 WithWriteLock wl(rw_lock); 
                 
                 if ( !bloom_filter.contains(s) ) {
-                    // frontier_queue.push(s);
                     frontier_queue.addUrl(s);
                     bloom_filter.insert(s);
+                    pthread_cond_signal(&cv);
                 }
             }
 

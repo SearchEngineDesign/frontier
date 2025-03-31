@@ -26,6 +26,13 @@ class ThreadSafeFrontier {
             // rw_lock = ReaderWriterLock();
         }
 
+        bool empty() {
+            {
+                WithReadLock wl(rw_lock);
+                return frontier_queue.empty();
+            }
+        }
+
         void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 

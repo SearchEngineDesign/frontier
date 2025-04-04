@@ -33,6 +33,28 @@ class ThreadSafeFrontier {
             }
         }
 
+        int buildFrontier( const char * path ) {
+            FILE *file = fopen(path, "r");
+            if (file == NULL) {
+                perror("Error opening file");
+                return 1;
+            }
+
+            char *line = NULL;
+            size_t len = 0;
+            ssize_t read;
+
+            while ((read = getline(&line, &len, file)) != -1) {
+                string s(line);
+                s = s.substr(0, s.size() - 1);
+                insert(s); //remove \n from end of string
+            }
+
+            free(line);
+            fclose(file);
+
+        }
+
         void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 

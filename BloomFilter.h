@@ -42,19 +42,20 @@ class Bloomfilter
 
       bool contains( const string &s )
          {
-         // Hash the string into two unqiue hashes.
+            // Hash the string into two unqiue hashes.
 
-         // Use double hashing to get unique bit, and repeat for each hash function.
-         // If bit is false, we know for certain this unique string has not been inserted.
+            // Use double hashing to get unique bit, and repeat for each hash function.
+            // If bit is false, we know for certain this unique string has not been inserted.
 
-         // If all bits were true, the string is likely inserted, but false positive is possible.
+            // If all bits were true, the string is likely inserted, but false positive is possible.
 
-         const auto hashes = hash(s);
-         for ( unsigned int i = 0; i < num_hashes; ++i )
-            {
-            const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
-            if ( !bits[index] ) return false; 
-            }
+            const auto hashes = hash(s);
+            for ( unsigned int i = 0; i < num_hashes; ++i ) 
+               {
+                  const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
+                  if ( !bits[index] ) return false; 
+               }
+            return true;
          }
 
    private:

@@ -55,6 +55,18 @@ class ThreadSafeFrontier {
 
         }
 
+        bool contains( const string &s ) 
+            {
+                WithReadLock rl(rw_lock); 
+                return bloom_filter.contains(s);
+            }
+
+        void blacklist( const string &s ) 
+            {
+                WithWriteLock wl(rw_lock); 
+                bloom_filter.insert(s);
+            }
+
         void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 

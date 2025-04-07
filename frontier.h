@@ -12,7 +12,7 @@
 
 
 class ThreadSafeFrontier {
-
+    
     private:
         // std::queue<string> frontier_queue;
         UrlQueue frontier_queue; 
@@ -36,9 +36,10 @@ class ThreadSafeFrontier {
             }
         }
 
-        int writeFrontier() {
-            WithWriteLock wl(rw_lock); 
+        int writeFrontier(bool truncate, int factor) {
             FILE *file = fopen("./log/frontier/list", "w");
+
+            WithWriteLock wl(rw_lock); 
             if (file == NULL) {
                 perror("Error opening file");
                 return 1;
@@ -46,9 +47,18 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             frontier_queue.clearList();
-            while (!frontier_queue.empty()) {
-                string s = frontier_queue.getUrlAndPop() + endl;
-                fputs(s.c_str(), file);
+            if (!truncate) {
+                while (!frontier_queue.empty()) {
+                    string s = frontier_queue.getUrlAndPop() + endl;
+                    fputs(s.c_str(), file);
+                }
+                
+            } else {
+                for (auto &i : *frontier_queue.getUrls()) {
+                    string s = i + endl;
+                    if (rand() % factor == 0)
+                        fputs(s.c_str(), file);
+                }     
             }
 
             fclose(file);

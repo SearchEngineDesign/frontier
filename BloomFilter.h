@@ -4,6 +4,9 @@
 #include <cmath>
 #include <string.h>
 #include <openssl/md5.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
 
 class Bloomfilter
    {
@@ -25,40 +28,55 @@ class Bloomfilter
          }
 
          int buildBloomFilter( const char * path ) {
-            FILE *file = fopen(path, "rb");
-            if (file == NULL) {
-                perror("Error opening file");
-                return 1;
+
+            int fd = open("./log/frontier/bloomfilter.bin", O_RDONLY );
+            if (fd == -1) {
+               std::cerr << "Error opening bloom filter";
+               exit(1);
             }
 
-            unsigned char byte;
-            int bit_position = 0;
+            struct stat sb;
+            if (fstat(fd, &sb) == -1) {
+               perror("Error getting file size");
+               close(fd);
+               exit(1);
+            }
+            int fsize = sb.st_size;
 
-            size_t pos = 0;
+            int pos = 0;
+            while (pos < bits.size() / 8) {
+               read(fd, bits.data() + pos, 1);
+               pos += 1;
+            }
 
-            while (fread(&byte, 1, 1, file) == 1 && pos < bits.size()) 
-               for (bit_position = 7; bit_position >= 0; bit_position--) 
-                    bits[pos] = ((byte >> bit_position) & 1);
-
-            fclose(file);
+            close(fd);
             return 0;
          }
 
          int writeBloomFilter() {
-            FILE *file = fopen("./log/frontier/bloomfilter", "w");
-            if (file == NULL) {
-                perror("Error opening file");
-                return 1;
+
+            int fd = open("./log/frontier/bloomfilter.bin", O_WRONLY | O_CREAT | O_TRUNC );
+            if (fd == -1) {
+               std::cerr << "Error opening bloom filter";
+               exit(1);
             }
+
+            struct stat sb;
+            if (fstat(fd, &sb) == -1) {
+               perror("Error getting file size");
+               close(fd);
+               exit(1);
+            }
+            int fsize = sb.st_size;
 
             int pos = 0;
             while (pos < bits.size()) {
                char *c = reinterpret_cast<char*>(bits.data() + pos);
-               fputs(c, file);
+               write(fd, c, 1);
                pos += 8;
             }
 
-            fclose(file);
+            close(fd);
 
          }
 

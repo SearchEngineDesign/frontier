@@ -5,13 +5,14 @@
 #include "../utils/vector.h"
 #include "../utils/ParsedUrl.h"
 #include "../utils/string.h"
+#include "../utils/HashTable.h"
+
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
-
+    
     private:
         vector<string> urls;
-        // HashTable<int, int> index_map;
 
         //? CAN THIS BE A VECTOR ?
         std::queue<string> urlPool;
@@ -37,6 +38,10 @@ class UrlQueue {
         }
 
     public:
+
+        vector<string> *getUrls() {
+            return &urls;
+        }
 
         const size_t DEFAULT_POOL_SIZE = 10;
 

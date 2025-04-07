@@ -22,8 +22,46 @@ class Bloomfilter
          this->num_hashes = num_hashes;
          bits.resize( optimized_size, false ); 
 
+         }
+
+         int buildBloomFilter( const char * path ) {
+            FILE *file = fopen(path, "rb");
+            if (file == NULL) {
+                perror("Error opening file");
+                return 1;
+            }
+
+            unsigned char byte;
+            int bit_position = 0;
+
+            size_t pos = 0;
+
+            while (fread(&byte, 1, 1, file) == 1 && pos < bits.size()) 
+               for (bit_position = 7; bit_position >= 0; bit_position--) 
+                    bits[pos] = ((byte >> bit_position) & 1);
+
+            fclose(file);
+            return 0;
+         }
+
+         int writeBloomFilter() {
+            FILE *file = fopen("./log/frontier/bloomfilter", "w");
+            if (file == NULL) {
+                perror("Error opening file");
+                return 1;
+            }
+
+            int pos = 0;
+            while (pos < bits.size()) {
+               char *c = reinterpret_cast<char*>(bits.data() + pos);
+               fputs(c, file);
+               pos += 8;
+            }
+
+            fclose(file);
 
          }
+
 
       void insert( const string &s)
          {
@@ -63,7 +101,7 @@ class Bloomfilter
       unsigned int num_hashes;
       // unsigned int optimized_size;
 
-      std::vector<bool> bits; 
+      vector<bool> bits; 
 
       std::pair<uint64_t, uint64_t> hash( const string &datum )
          {

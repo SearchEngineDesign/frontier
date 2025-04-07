@@ -42,7 +42,17 @@ class UrlQueue {
 
         UrlQueue() : urls(), urlPool() {
             
-         }
+        }
+
+        void clearList() {
+            std::queue<string>().swap(urlPool);
+        }
+
+        string getUrlAndPop() {
+            string s = urls.back();
+            urls.popBack();
+            return s;
+        }
 
         void addUrl(const string &url) {
             urls.push_back(url);

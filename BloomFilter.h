@@ -44,7 +44,7 @@ class Bloomfilter
             int fsize = sb.st_size;
 
             int pos = 0;
-            while (pos < bits.size() / 8) {
+            while (pos < bits.size() / 8 && pos < fsize) {
                read(fd, bits.data() + pos, 1);
                pos += 1;
             }

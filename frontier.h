@@ -37,7 +37,7 @@ class ThreadSafeFrontier {
         }
 
         int writeFrontier(bool truncate, int factor) {
-            FILE *file = fopen("./log/frontier/list", "w");
+            FILE *file = fopen("./log/frontier/list", "w+");
 
             WithWriteLock wl(rw_lock); 
             if (file == NULL) {
@@ -72,6 +72,8 @@ class ThreadSafeFrontier {
         }
 
         int buildFrontier( const char * path ) {
+            int MAX_HOST = 300;
+            HashTable<string, int> weights;
             FILE *file = fopen(path, "r");
             if (file == NULL) {
                 perror("Error opening file");
@@ -85,7 +87,11 @@ class ThreadSafeFrontier {
             while ((read = getline(&line, &len, file)) != -1) {
                 string s(line);
                 s = s.substr(0, s.size() - 1);
-                insert(s); //remove \n from end of string
+                auto *i = weights.Find(ParsedUrl(s).Host, 0);
+                if (i->value < MAX_HOST) {
+                    insert(s); 
+                    ++i->value;
+                }   
             }
 
             free(line);

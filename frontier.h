@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+int MAX_HOST = 300;
 
 class ThreadSafeFrontier {
     
@@ -36,8 +37,9 @@ class ThreadSafeFrontier {
             }
         }
 
-        int writeFrontier(bool truncate, int factor) {
+        int writeFrontier(int factor) {
             FILE *file = fopen("./log/frontier/list", "w+");
+            HashTable<string, int> weights;
 
             WithWriteLock wl(rw_lock); 
             if (file == NULL) {
@@ -47,18 +49,16 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             frontier_queue.clearList();
-            if (!truncate) {
-                while (!frontier_queue.empty()) {
+            while (!frontier_queue.empty()) {
+                if (rand() % factor == 0)  {
+
                     string s = frontier_queue.getUrlAndPop() + endl;
-                    fputs(s.c_str(), file);
-                }
-                
-            } else {
-                for (auto &i : *frontier_queue.getUrls()) {
-                    string s = i + endl;
-                    if (rand() % factor == 0)
+                    auto *i = weights.Find(ParsedUrl(s).Host, 0);
+                    if (i->value < MAX_HOST) {
                         fputs(s.c_str(), file);
-                }     
+                        ++i->value;
+                    }   
+                }
             }
 
             fclose(file);
@@ -72,7 +72,6 @@ class ThreadSafeFrontier {
         }
 
         int buildFrontier( const char * path ) {
-            int MAX_HOST = 300;
             HashTable<string, int> weights;
             FILE *file = fopen(path, "r");
             if (file == NULL) {

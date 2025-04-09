@@ -90,7 +90,7 @@ class ThreadSafeFrontier {
                 string s(line);
                 s = s.substr(0, s.size() - 1);
                 auto *i = weights.Find(ParsedUrl(s).Host, 0);
-                if (i->value < MAX_HOST) {
+                if (i->value < MAX_HOST && s.size() > 0) {
                     insert(s); 
                     ++i->value;
                 }   

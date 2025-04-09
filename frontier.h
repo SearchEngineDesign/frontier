@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 int MAX_HOST = 300;
+int MAX_DOC = 300000;
 
 class ThreadSafeFrontier {
     
@@ -49,7 +50,8 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             frontier_queue.clearList();
-            while (!frontier_queue.empty()) {
+            int count = 0;
+            while (!frontier_queue.empty() && count < MAX_DOC) {
                 if (rand() % factor == 0)  {
 
                     string s = frontier_queue.getUrlAndPop() + endl;
@@ -57,6 +59,7 @@ class ThreadSafeFrontier {
                     if (i->value < MAX_HOST) {
                         fputs(s.c_str(), file);
                         ++i->value;
+                        count++;
                     }   
                 }
             }

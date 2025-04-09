@@ -6,10 +6,14 @@
 #include "ReaderWriterLock.h"
 #include <pthread.h>
 #include "UrlQueue.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
+int MAX_HOST = 300;
 
 class ThreadSafeFrontier {
-
+    
     private:
         // std::queue<string> frontier_queue;
         UrlQueue frontier_queue; 
@@ -32,6 +36,79 @@ class ThreadSafeFrontier {
                 return frontier_queue.empty();
             }
         }
+
+        int writeFrontier(int factor) {
+            FILE *file = fopen("./log/frontier/list", "w+");
+            HashTable<string, int> weights;
+
+            WithWriteLock wl(rw_lock); 
+            if (file == NULL) {
+                perror("Error opening file");
+                return 1;
+            }
+
+            string endl("\n");
+            frontier_queue.clearList();
+            while (!frontier_queue.empty()) {
+                if (rand() % factor == 0)  {
+
+                    string s = frontier_queue.getUrlAndPop() + endl;
+                    auto *i = weights.Find(ParsedUrl(s).Host, 0);
+                    if (i->value < MAX_HOST) {
+                        fputs(s.c_str(), file);
+                        ++i->value;
+                    }   
+                }
+            }
+
+            fclose(file);
+
+            bloom_filter.writeBloomFilter();
+            
+        }
+
+        int buildBloomFilter( const char * path ) {
+            return bloom_filter.buildBloomFilter( path );
+        }
+
+        int buildFrontier( const char * path ) {
+            HashTable<string, int> weights;
+            FILE *file = fopen(path, "r");
+            if (file == NULL) {
+                perror("Error opening file");
+                return 1;
+            }
+
+            char *line = NULL;
+            size_t len = 0;
+            ssize_t read;
+
+            while ((read = getline(&line, &len, file)) != -1) {
+                string s(line);
+                s = s.substr(0, s.size() - 1);
+                auto *i = weights.Find(ParsedUrl(s).Host, 0);
+                if (i->value < MAX_HOST) {
+                    insert(s); 
+                    ++i->value;
+                }   
+            }
+
+            free(line);
+            fclose(file);
+            return 0;
+        }
+
+        bool contains( const string &s ) 
+            {
+                WithReadLock rl(rw_lock); 
+                return bloom_filter.contains(s);
+            }
+
+        void blacklist( const string &s ) 
+            {
+                WithWriteLock wl(rw_lock); 
+                bloom_filter.insert(s);
+            }
 
         void insert( const string &s ) {
             {

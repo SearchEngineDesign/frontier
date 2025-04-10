@@ -7,6 +7,8 @@
 #include "../utils/string.h"
 #include "../utils/HashTable.h"
 
+#include "DosProtector.h"
+
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
@@ -15,7 +17,11 @@ class UrlQueue {
         vector<string> urls;
 
         //? CAN THIS BE A VECTOR ?
+        //* YUH BECAUSE ORDERING DOESN:T MATTER IF ITS ALREADY IIN THE POOL
         std::queue<string> urlPool;
+
+        DosProtector dosProtector;
+        
 
     
         void fillUrlPool() {
@@ -25,16 +31,27 @@ class UrlQueue {
 
             const int k = std::min(urls.size(), DEFAULT_POOL_SIZE);
             
-            for (int i = 0; i < k; ++i) {
-                // select a random index
+            unsigned int count = 0;
+
+            while (count < k) {
                 const unsigned int randomIndex = rand() % urls.size();
                 string selectedUrl = urls[randomIndex];
-                urlPool.push(selectedUrl);
+                
+                if (!dosProtector.isRequestAllowed(selectedUrl)) {
+                    continue; // skip this URL if the request is not allowed
+                }
 
+                count++;
+                urlPool.push(selectedUrl);
+                
+                
+                // !TODO ADJUSTMENT
+                
                 // swap the selected url with the last url in the vector
                 std::swap(urls[randomIndex], urls[urls.size() - 1]);
                 urls.popBack(); 
             }
+
         }
 
     public:
@@ -45,9 +62,7 @@ class UrlQueue {
 
         const size_t DEFAULT_POOL_SIZE = 10;
 
-        UrlQueue() : urls(), urlPool() {
-            
-        }
+        UrlQueue() = default;
 
         void clearList() {
             urls.clear();
@@ -57,6 +72,7 @@ class UrlQueue {
         string getUrlAndPop() {
             string s = urls.back();
             urls.popBack();
+            dosProtector.updateRequestTime(s);
             return s;
         }
 
@@ -65,8 +81,6 @@ class UrlQueue {
         }
 
         string getNextUrl() {
-
-         
 
             if (urlPool.empty() and urls.empty()) {
                 throw std::runtime_error("No URLs available");

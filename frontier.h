@@ -11,8 +11,8 @@
 #include <sys/stat.h>
 #include <atomic>
 
-int MAX_HOST = 300;
-int MAX_DOC = 300000;
+const static int MAX_HOST = 300;
+const static int MAX_DOC = 300000;
 
 class ThreadSafeFrontier {
     
@@ -28,10 +28,12 @@ class ThreadSafeFrontier {
         std::atomic<bool> returnEmpty;
 
     public:
+
+        ThreadSafeFrontier() : bloom_filter(1, 0.1), returnEmpty(false) {
+        }
+
         ThreadSafeFrontier( int num_objects, double false_positive_rate ) : 
-        frontier_queue(), bloom_filter(num_objects, false_positive_rate), rw_lock(), returnEmpty(false) { 
-            // pthread_mutex_init(&lock, nullptr); 
-            // rw_lock = ReaderWriterLock();
+         bloom_filter(num_objects, false_positive_rate), returnEmpty(false) {
         }
 
         bool empty() {

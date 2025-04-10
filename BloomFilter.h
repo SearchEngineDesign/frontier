@@ -3,7 +3,9 @@
 
 #include <cmath>
 // #include <string.h>
-// #include <openssl/md5.h>
+// #include <openssl/md5.h>Go to your project folder and make sure there's a file at:
+
+
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -11,23 +13,15 @@
 #include <utility>
 #include <cassert>
 
-#include <openssl/evp.h>
-#include <openssl/sha.h>
 
-#include <memory>
+#include "../utils/crypto.h"
+
 
 class Bloomfilter
    {
    public:
       Bloomfilter( int num_objects, double false_positive_rate )
          {
-
-
-            ctx = EVP_MD_CTX_new();
-            EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr);
-
-
-   
 
          // Determine the size of bits of our data vector, and resize.
 
@@ -36,15 +30,14 @@ class Bloomfilter
          const unsigned int optimized_size = (int)(- (num_objects * log(false_positive_rate)) / (log(2) * log(2)));
 
          // Determine number of hash functions to use.
-         const unsigned int num_hashes = (int)( (optimized_size / num_objects) * log(2) );
+         const unsigned int n = (int)( (optimized_size / num_objects) * log(2) );
          
-         this->num_hashes = num_hashes;
+         this->num_hashes = n;
          bits.resize( optimized_size, false ); 
 
          }
 
          ~Bloomfilter() {
-            EVP_MD_CTX_free(ctx);
          }
 
          int buildBloomFilter( const char * path ) {
@@ -105,7 +98,7 @@ class Bloomfilter
          {
          // Hash the string into two unique hashes.
          // const auto s_new = std::string(s.c_str());
-         const auto hashes = hash(s);
+         const auto hashes = crypto.doubleHash(s);
          // Use double hashing to get unique bit, and repeat for each hash function.
 
          for ( unsigned int i = 0; i < num_hashes; ++i )
@@ -126,7 +119,7 @@ class Bloomfilter
 
             // If all bits were true, the string is likely inserted, but false positive is possible.
 
-            const auto hashes = hash(s);
+            const auto hashes = crypto.doubleHash(s);
             for ( unsigned int i = 0; i < num_hashes; ++i ) 
                {
                   const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
@@ -143,25 +136,7 @@ class Bloomfilter
 
       vector<bool> bits; 
 
-      EVP_MD_CTX* ctx;
-   
-      std::pair<uint64_t, uint64_t> hash(const string& datum) {
-         
-         assert(datum.length() > 0);
-         
-         unsigned char hash_digest[EVP_MAX_MD_SIZE];
-     
-         EVP_DigestUpdate(ctx, datum.c_str(), datum.length());
-         EVP_DigestFinal_ex(ctx, hash_digest, nullptr);
-
-
-         // Split the 128-bit hash into two 64-bit parts
-         uint64_t hash1 = 0, hash2 = 0;
-         std::memcpy(&hash1, hash_digest, sizeof(uint64_t));
-         std::memcpy(&hash2, hash_digest + sizeof(uint64_t), sizeof(uint64_t));
-     
-         return {hash1, hash2};
-     }
+      Crypto crypto;
    
    };
 

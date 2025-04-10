@@ -14,12 +14,21 @@
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 
+#include <memory>
 
 class Bloomfilter
    {
    public:
       Bloomfilter( int num_objects, double false_positive_rate )
          {
+
+
+            ctx = EVP_MD_CTX_new();
+            EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr);
+
+
+   
+
          // Determine the size of bits of our data vector, and resize.
 
          // Use the formula: m = - (n * log(p)) / (log(2)^2)
@@ -32,6 +41,10 @@ class Bloomfilter
          this->num_hashes = num_hashes;
          bits.resize( optimized_size, false ); 
 
+         }
+
+         ~Bloomfilter() {
+            EVP_MD_CTX_free(ctx);
          }
 
          int buildBloomFilter( const char * path ) {
@@ -129,6 +142,8 @@ class Bloomfilter
       // unsigned int optimized_size;
 
       vector<bool> bits; 
+
+      EVP_MD_CTX* ctx;
    
       std::pair<uint64_t, uint64_t> hash(const string& datum) {
          
@@ -136,11 +151,8 @@ class Bloomfilter
          
          unsigned char hash_digest[EVP_MAX_MD_SIZE];
      
-         EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-         EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr);
          EVP_DigestUpdate(ctx, datum.c_str(), datum.length());
          EVP_DigestFinal_ex(ctx, hash_digest, nullptr);
-         EVP_MD_CTX_free(ctx);
 
 
          // Split the 128-bit hash into two 64-bit parts

@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <atomic>
 
 int MAX_HOST = 300;
 int MAX_DOC = 300000;
@@ -24,18 +25,18 @@ class ThreadSafeFrontier {
         ReaderWriterLock rw_lock;
         pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
 
+        std::atomic<bool> returnEmpty;
+
     public:
         ThreadSafeFrontier( int num_objects, double false_positive_rate ) : 
-        frontier_queue(), bloom_filter(num_objects, false_positive_rate), rw_lock() { 
+        frontier_queue(), bloom_filter(num_objects, false_positive_rate), rw_lock(), returnEmpty(false) { 
             // pthread_mutex_init(&lock, nullptr); 
             // rw_lock = ReaderWriterLock();
         }
 
         bool empty() {
-            {
-                WithReadLock wl(rw_lock);
-                return frontier_queue.empty();
-            }
+            WithReadLock wl(rw_lock);
+            return frontier_queue.empty();
         }
 
         int writeFrontier(int factor) {
@@ -96,7 +97,7 @@ class ThreadSafeFrontier {
                 }   
             }
 
-            free(line);
+            free(line); // ? this is never allocated
             fclose(file);
             return 0;
         }
@@ -126,13 +127,42 @@ class ThreadSafeFrontier {
 
         }
 
+        void startReturningEmpty() {
+            WithReadLock rl(rw_lock);
+            returnEmpty = true;
+            pthread_cond_broadcast(&cv); // Notify all waiting threads
+        }
+
+        void stopReturningEmpty() {
+            returnEmpty = false;
+        }
+       
+
+        void emptyFrontier() {
+            WithWriteLock wl(rw_lock);
+            // frontier_queue. write the frontier queue
+            frontier_queue.clearList();
+        }
+
         string getNextURLorWait() {
             {
+                
+                if (returnEmpty) {
+                    return "";
+                }
+
                 WithWriteLock wl(rw_lock);
 
                 // check that thread is still alive
-                while ( frontier_queue.empty()) {
+                while ( frontier_queue.empty() and returnEmpty == false) {
+                    if (!returnEmpty) {
+                        std::cout << "waiting because frontier queue is empty and is not returningEMpty string" << std::endl;
+                    }
                     pthread_cond_wait(&cv, &rw_lock.write_lock); // Wait for a URL to be available
+                }
+
+                if (returnEmpty) {
+                    return "";
                 }
 
                 // string url = frontier_queue.front();

@@ -50,6 +50,7 @@ class UrlQueue {
         }
 
         void clearList() {
+            urls.clear();
             std::queue<string>().swap(urlPool);
         }
 
@@ -65,9 +66,7 @@ class UrlQueue {
 
         string getNextUrl() {
 
-            // while (urlPool.empty() and urls.empty()) {
-                // wait
-            // }
+         
 
             if (urlPool.empty() and urls.empty()) {
                 throw std::runtime_error("No URLs available");

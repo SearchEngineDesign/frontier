@@ -6,6 +6,7 @@
 #include "../utils/ParsedUrl.h"
 #include "../utils/string.h"
 #include "../utils/HashTable.h"
+//#include "../ranker/static/StaticRanker.h"
 
 #include "DosProtector.h"
 
@@ -22,18 +23,19 @@ class UrlQueue {
 
         DosProtector dosProtector;
         
+        static constexpr size_t DEFAULT_POOL_SIZE = 100;
+        static constexpr size_t DEFAULT_N = 100;
 
-    
         void fillUrlPool() {
             // select random K urls from urls and add them to urlPool
             
             // TODO: select N links and statically rank them to select the top K
 
             const int k = std::min(urls.size(), DEFAULT_POOL_SIZE);
-            
+            const int n = std::min(urls.size(), DEFAULT_N);
             unsigned int count = 0;
 
-            while (count < k) {
+            while (count < n) {
                 const unsigned int randomIndex = rand() % urls.size();
                 string selectedUrl = urls[randomIndex];
                 
@@ -60,14 +62,12 @@ class UrlQueue {
             return &urls;
         }
 
-        const size_t DEFAULT_POOL_SIZE = 10;
-
         UrlQueue() = default;
 
         void clearList(bool clearall) {
-            if (clearall)
+            /*if (clearall)
                 urls.clear();
-            std::queue<string>().swap(urlPool);
+            std::queue<string>().swap(urlPool);*/
             dosProtector.reset();
         }
 

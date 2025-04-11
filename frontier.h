@@ -26,6 +26,11 @@ class ThreadSafeFrontier {
         pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
 
         std::atomic<bool> returnEmpty;
+        
+        
+    // urlForwarder(numNodes, id, NUM_OBJECTS, ERROR_RATE),
+        UrlForwarder urlForwarder;
+
 
     public:
 
@@ -42,9 +47,8 @@ class ThreadSafeFrontier {
         }
 
         int writeFrontier(int factor) {
-            FILE *file = fopen("./log/frontier/list", "w+");
-
             WithWriteLock wl(rw_lock); 
+            FILE *file = fopen("./log/frontier/list", "w+");
             if (file == NULL) {
                 perror("Error opening file");
                 return 1;
@@ -123,15 +127,12 @@ class ThreadSafeFrontier {
         }
 
         void reset() {
-            {
-            WithReadLock rl(rw_lock);
+            WithWriteLock wl(rw_lock);
             frontier_queue.clearList(true);
-            }
             buildFrontier("./log/frontier/list");
         }
 
         void startReturningEmpty() {
-            WithReadLock rl(rw_lock);
             returnEmpty = true;
             pthread_cond_broadcast(&cv); // Notify all waiting threads
         }

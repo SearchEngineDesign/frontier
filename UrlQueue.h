@@ -64,8 +64,9 @@ class UrlQueue {
 
         UrlQueue() = default;
 
-        void clearList() {
-            urls.clear();
+        void clearList(bool clearall) {
+            if (clearall)
+                urls.clear();
             std::queue<string>().swap(urlPool);
         }
 

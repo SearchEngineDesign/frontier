@@ -52,7 +52,7 @@ class ThreadSafeFrontier {
             }
 
             string endl("\n");
-            frontier_queue.clearList();
+            frontier_queue.clearList(false);
             int count = 0;
             while (!frontier_queue.empty() && count < MAX_DOC) {
                 if (rand() % factor == 0)  {
@@ -129,6 +129,12 @@ class ThreadSafeFrontier {
 
         }
 
+        void reset() {
+            WithReadLock rl(rw_lock);
+            frontier_queue.clearList(true);
+            buildFrontier("./log/frontier/list");
+        }
+
         void startReturningEmpty() {
             WithReadLock rl(rw_lock);
             returnEmpty = true;
@@ -137,13 +143,6 @@ class ThreadSafeFrontier {
 
         void stopReturningEmpty() {
             returnEmpty = false;
-        }
-       
-
-        void emptyFrontier() {
-            WithWriteLock wl(rw_lock);
-            // frontier_queue. write the frontier queue
-            frontier_queue.clearList();
         }
 
         string getNextURLorWait() {

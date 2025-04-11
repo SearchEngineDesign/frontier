@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 
 #include "../utils/vector.h"
+#include "../frontier/ReaderWriterLock.h"
+
 #include <utility>
 #include <cassert>
 
@@ -100,7 +102,7 @@ class Bloomfilter
          // const auto s_new = std::string(s.c_str());
          const auto hashes = crypto.doubleHash(s);
          // Use double hashing to get unique bit, and repeat for each hash function.
-
+         WithWriteLock wl(bloom_lock);
          for ( unsigned int i = 0; i < num_hashes; ++i )
             {
             const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
@@ -120,6 +122,7 @@ class Bloomfilter
             // If all bits were true, the string is likely inserted, but false positive is possible.
 
             const auto hashes = crypto.doubleHash(s);
+            WithWriteLock wl(bloom_lock);
             for ( unsigned int i = 0; i < num_hashes; ++i ) 
                {
                   const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
@@ -137,6 +140,8 @@ class Bloomfilter
       vector<bool> bits; 
 
       Crypto crypto;
+
+      ReaderWriterLock bloom_lock;
    
    };
 

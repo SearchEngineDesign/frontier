@@ -40,4 +40,11 @@ class DosProtector {
             lastRequestTime.Find(url, timeInMS); // Update the last request time
 
         }
+
+        inline void reset() {
+            for (auto i : lastRequestTime) {
+                if (i.value > 10000) {}
+                    // clean up or something -- no delete function in hashtable yet
+            }
+        }
 };

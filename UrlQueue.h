@@ -68,6 +68,7 @@ class UrlQueue {
             if (clearall)
                 urls.clear();
             std::queue<string>().swap(urlPool);
+            dosProtector.reset();
         }
 
         string getUrlAndPop() {

@@ -43,7 +43,6 @@ class ThreadSafeFrontier {
 
         int writeFrontier(int factor) {
             FILE *file = fopen("./log/frontier/list", "w+");
-            HashTable<string, int> weights;
 
             WithWriteLock wl(rw_lock); 
             if (file == NULL) {
@@ -52,18 +51,12 @@ class ThreadSafeFrontier {
             }
 
             string endl("\n");
-            frontier_queue.clearList(false);
             int count = 0;
             while (!frontier_queue.empty() && count < MAX_DOC) {
                 if (rand() % factor == 0)  {
-
                     string s = frontier_queue.getUrlAndPop() + endl;
-                    auto *i = weights.Find(ParsedUrl(s).Host, 0);
-                    if (i->value < MAX_HOST) {
-                        fputs(s.c_str(), file);
-                        ++i->value;
-                        count++;
-                    }   
+                    fputs(s.c_str(), file);
+                    count++;
                 }
             }
 
@@ -130,8 +123,10 @@ class ThreadSafeFrontier {
         }
 
         void reset() {
+            {
             WithReadLock rl(rw_lock);
             frontier_queue.clearList(true);
+            }
             buildFrontier("./log/frontier/list");
         }
 
@@ -157,7 +152,7 @@ class ThreadSafeFrontier {
                 // check that thread is still alive
                 while ( frontier_queue.empty() and returnEmpty == false) {
                     if (!returnEmpty) {
-                        std::cout << "waiting because frontier queue is empty and is not returningEMpty string" << std::endl;
+                        std::cout << "waiting because frontier queue is empty and is not returning" << std::endl;
                     }
                     pthread_cond_wait(&cv, &rw_lock.write_lock); // Wait for a URL to be available
                 }

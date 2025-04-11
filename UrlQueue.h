@@ -97,7 +97,7 @@ class UrlQueue {
         }
 
         inline bool empty() const {
-            return urls.empty() and urlPool.empty();
+            return urls.empty();
         }
 
 };

@@ -22,22 +22,49 @@
 class Bloomfilter
    {
    public:
-      Bloomfilter( int num_objects, double false_positive_rate )
+      // Bloomfilter( int num_objects, double false_positive_rate )
+      //    {
+
+      //    // Determine the size of bits of our data vector, and resize.
+
+      //    // Use the formula: m = - (n * log(p)) / (log(2)^2)
+
+      //    const unsigned int optimized_size = (int)(- (num_objects * log(false_positive_rate)) / (log(2) * log(2)));
+
+      //    // Determine number of hash functions to use.
+      //    const unsigned int n = (int)( (optimized_size / num_objects) * log(2) );
+         
+      //    this->num_hashes = n;
+      //    bits.resize( optimized_size, false ); 
+
+      //    }
+
+
+
+      Bloomfilter()
          {
+            this->num_hashes = 0;
+         }
+
+      Bloomfilter(bool construct) {
+         if (!construct) {
+            this->num_hashes = 0;
+            return;
+         } 
 
          // Determine the size of bits of our data vector, and resize.
 
          // Use the formula: m = - (n * log(p)) / (log(2)^2)
 
-         const unsigned int optimized_size = (int)(- (num_objects * log(false_positive_rate)) / (log(2) * log(2)));
+         const unsigned int optimized_size = (int)(- (NUM_OBJECTS * log(FALSE_POSITIVE_RATE)) / (log(2) * log(2)));
 
          // Determine number of hash functions to use.
-         const unsigned int n = (int)( (optimized_size / num_objects) * log(2) );
+         const unsigned int n = (int)( (optimized_size / NUM_OBJECTS) * log(2) );
          
          this->num_hashes = n;
          bits.resize( optimized_size, false ); 
-
-         }
+         
+      }
 
          ~Bloomfilter() {
          }
@@ -73,14 +100,14 @@ class Bloomfilter
             int fd = open("./log/frontier/bloomfilter.bin", O_TRUNC | O_RDWR );
             if (fd == -1) {
                std::cerr << "Error opening bloom filter";
-               exit(1);
+               return 1;
             }
 
             struct stat sb;
             if (fstat(fd, &sb) == -1) {
                perror("Error getting file size");
                close(fd);
-               exit(1);
+               return 1;
             }
             int fsize = sb.st_size;
 
@@ -92,16 +119,16 @@ class Bloomfilter
             }
 
             close(fd);
-
+            return 0;
          }
 
 
-      void insert( const string &s)
+      void insert( const string s)
          {
          // Hash the string into two unique hashes.
          // const auto s_new = std::string(s.c_str());
          // Use double hashing to get unique bit, and repeat for each hash function.
-         WithWriteLock wl(bloom_lock);
+         // WithWriteLock wl(bloom_lock);
          const auto hashes = crypto.doubleHash(s);
          for ( unsigned int i = 0; i < num_hashes; ++i )
             {
@@ -112,7 +139,7 @@ class Bloomfilter
 
 
 
-      bool contains( const string &s )
+      bool contains( const string s ) 
          {
             // Hash the string into two unqiue hashes.
 
@@ -122,7 +149,6 @@ class Bloomfilter
             // If all bits were true, the string is likely inserted, but false positive is possible.
 
             
-            WithWriteLock wl(bloom_lock);
             const auto hashes = crypto.doubleHash(s);
             for ( unsigned int i = 0; i < num_hashes; ++i ) 
                {
@@ -134,7 +160,11 @@ class Bloomfilter
 
 
    private:
-      // Add any private member variables that may be neccessary.
+
+         static constexpr size_t NUM_OBJECTS = 10000000; // 10 million
+         static constexpr double FALSE_POSITIVE_RATE = 0.005; // .5%
+      
+
       unsigned int num_hashes;
       // unsigned int optimized_size;
 
@@ -142,7 +172,9 @@ class Bloomfilter
 
       Crypto crypto;
 
-      ReaderWriterLock bloom_lock;
+      // ReaderWriterLock bloom_lock;
+
+
    
    };
 

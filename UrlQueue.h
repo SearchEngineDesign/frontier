@@ -23,34 +23,53 @@ class UrlQueue {
 
         DosProtector dosProtector;
         
-        static constexpr size_t DEFAULT_POOL_SIZE = 100;
+        static constexpr size_t MAX_POOL_CANDIDATES = 500;
+        static constexpr size_t MAX_POOL_SIZE = 100;
 
         void fillUrlPool() {
             // select random K urls from urls and add them to urlPool
             
             // TODO: select N links and statically rank them to select the top K
 
-            const int k = std::min(urls.size(), DEFAULT_POOL_SIZE);
+            const int k = std::min(urls.size(), MAX_POOL_SIZE);
+            const int N = std::min(urls.size(), MAX_POOL_CANDIDATES);
+
+
             unsigned int count = 0;
 
-            while (count < k) {
+            while (count < N) {
                 const unsigned int randomIndex = rand() % urls.size();
-                string selectedUrl = urls[randomIndex];
+                const string& selectedUrl = urls[randomIndex];
                 
                 if (!dosProtector.isRequestAllowed(selectedUrl)) {
                     continue; // skip this URL if the request is not allowed
                 }
 
                 count++;
-                urlPool.push(selectedUrl);
-                
-                
-                // !TODO ADJUSTMENT
-                
-                // swap the selected url with the last url in the vector
-                std::swap(urls[randomIndex], urls[urls.size() - 1]);
-                urls.popBack(); 
+
+
+                if (urlPool.size() < MAX_POOL_SIZE) {
+                    urlPool.push(selectedUrl);
+                   
+                } else if (StaticRanker()(selectedUrl, urlPool.top())) {
+
+                    urls.push_back(urlPool.top()); // Add the worst-ranked URL back to the pool
+
+                    urlPool.pop();         // Remove worst-ranked from the pool
+                    urlPool.push(selectedUrl);     // Insert better one
+                } else {
+                    continue; // skip this URL if it is not better than the worst-ranked one
+                }
+
+                 // swap the selected url with the last url in the vector to efficiently remote it
+                 std::swap(urls[randomIndex], urls[urls.size() - 1]);
+                 urls.popBack(); 
+
+
             }
+
+            
+            
 
         }
 
@@ -61,13 +80,6 @@ class UrlQueue {
         }
 
         UrlQueue() = default;
-
-        void clearList(bool clearall) {
-            /*if (clearall)
-                urls.clear();
-            std::queue<string>().swap(urlPool);*/
-            dosProtector.reset();
-        }
 
         string getUrlAndPop() {
             string s = urls.back();
@@ -96,6 +108,10 @@ class UrlQueue {
         }
 
         inline bool empty() const {
+            return urls.empty() && urlPool.empty();
+        }
+
+        inline bool vecempty() const {
             return urls.empty();
         }
 

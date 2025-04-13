@@ -10,6 +10,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <atomic>
+#include "../distrib/URLForwarder.h"
+#include "../distrib/URLReceiver.h"
+
 
 const static int MAX_HOST = 300;
 const static int MAX_DOC = 300000;
@@ -29,21 +32,36 @@ class ThreadSafeFrontier {
         
         
     // urlForwarder(numNodes, id, NUM_OBJECTS, ERROR_RATE),
-        //UrlForwarder urlForwarder;
+
+        unsigned int numNodes;
+        unsigned int id;
+
+        UrlForwarder urlForwarder;
+        std::unique_ptr<UrlReceiver[]> urlReceivers;  
 
 
     public:
 
-        ThreadSafeFrontier() : bloom_filter(1, 0.1), returnEmpty(false) {
+        ThreadSafeFrontier() : bloom_filter(false), returnEmpty(false)
+        {
+            // pthread_mutex_init(&lock, NULL);
         }
 
-        ThreadSafeFrontier( int num_objects, double false_positive_rate ) : 
-         bloom_filter(num_objects, false_positive_rate), returnEmpty(false) {
-        }
-
-        bool empty() {
-            WithReadLock wl(rw_lock);
-            return frontier_queue.empty();
+        ThreadSafeFrontier(const unsigned int numNodes, const unsigned int id) : 
+            bloom_filter(true), 
+            returnEmpty(false),
+            numNodes(numNodes),
+            id(id),
+            urlForwarder(numNodes, id), 
+            urlReceivers(new UrlReceiver[numNodes]) 
+        {
+            for (size_t i = 0; i < numNodes; i++) {
+                if(i == id) {
+                    new (&urlReceivers[i]) UrlReceiver(i, 8080, this);
+                } else {
+                    // urlReceivers.push_back(nullptr);
+                }
+            }
         }
 
         int writeFrontier(int factor) {
@@ -56,7 +74,7 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             int count = 0;
-            while (!frontier_queue.empty() && count < MAX_DOC) {
+            while (!frontier_queue.vecempty() && count < MAX_DOC) {
                 if (rand() % factor == 0)  {
                     string s = frontier_queue.getUrlAndPop() + endl;
                     fputs(s.c_str(), file);
@@ -66,7 +84,7 @@ class ThreadSafeFrontier {
 
             fclose(file);
 
-            bloom_filter.writeBloomFilter();
+            return bloom_filter.writeBloomFilter();
             
         }
 
@@ -104,7 +122,7 @@ class ThreadSafeFrontier {
 
         bool contains( const string &s ) 
             {
-                WithReadLock rl(rw_lock); 
+                WithWriteLock wl(rw_lock); 
                 return bloom_filter.contains(s);
             }
 
@@ -117,7 +135,21 @@ class ThreadSafeFrontier {
         void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 
+
+                const int urlOwner = urlForwarder.addUrl(s);
                 
+                if (urlOwner == id) {
+                    insertWithutForwarding(s);
+                }
+
+            }
+        }
+
+        inline void insertWithutForwarding(const string &s) {
+            {
+
+                // !WARNING: THIS IS NOT THREAD SAFE, DO NOT CALL OUTSIDE OF INSERT
+
                 if ( !bloom_filter.contains(s) ) {
                     frontier_queue.addUrl(s);
                     bloom_filter.insert(s);
@@ -127,10 +159,6 @@ class ThreadSafeFrontier {
 
         }
 
-        void reset() {
-            WithWriteLock wl(rw_lock);
-            frontier_queue.clearList(true);
-        }
 
         void startReturningEmpty() {
             returnEmpty = true;

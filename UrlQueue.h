@@ -6,7 +6,7 @@
 #include "../utils/ParsedUrl.h"
 #include "../utils/string.h"
 #include "../utils/HashTable.h"
-//#include "../ranker/static/StaticRanker.h"
+#include "../ranker/StaticRanker.h"
 
 #include "DosProtector.h"
 
@@ -19,12 +19,11 @@ class UrlQueue {
 
         //? CAN THIS BE A VECTOR ?
         //* YUH BECAUSE ORDERING DOESN:T MATTER IF ITS ALREADY IIN THE POOL
-        std::queue<string> urlPool;
+        std::priority_queue<string, std::vector<string>, StaticRanker> urlPool;
 
         DosProtector dosProtector;
         
         static constexpr size_t DEFAULT_POOL_SIZE = 100;
-        static constexpr size_t DEFAULT_N = 100;
 
         void fillUrlPool() {
             // select random K urls from urls and add them to urlPool
@@ -32,10 +31,9 @@ class UrlQueue {
             // TODO: select N links and statically rank them to select the top K
 
             const int k = std::min(urls.size(), DEFAULT_POOL_SIZE);
-            const int n = std::min(urls.size(), DEFAULT_N);
             unsigned int count = 0;
 
-            while (count < n) {
+            while (count < k) {
                 const unsigned int randomIndex = rand() % urls.size();
                 string selectedUrl = urls[randomIndex];
                 
@@ -92,7 +90,7 @@ class UrlQueue {
                 fillUrlPool();
             }
 
-            string nextUrl = urlPool.front();
+            string nextUrl = urlPool.top();
             urlPool.pop();
             return nextUrl;
         }

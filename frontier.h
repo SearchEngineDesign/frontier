@@ -29,7 +29,7 @@ class ThreadSafeFrontier {
         
         
     // urlForwarder(numNodes, id, NUM_OBJECTS, ERROR_RATE),
-        UrlForwarder urlForwarder;
+        //UrlForwarder urlForwarder;
 
 
     public:
@@ -129,7 +129,6 @@ class ThreadSafeFrontier {
         void reset() {
             WithWriteLock wl(rw_lock);
             frontier_queue.clearList(true);
-            buildFrontier("./log/frontier/list");
         }
 
         void startReturningEmpty() {

@@ -44,17 +44,17 @@ class Bloomfilter
 
          int buildBloomFilter( const char * path ) {
 
-            int fd = open("./log/frontier/bloomfilter.bin", O_RDONLY );
+            int fd = open(path, O_RDONLY );
             if (fd == -1) {
                std::cerr << "Error opening bloom filter";
-               exit(1);
+               return 1;
             }
 
             struct stat sb;
             if (fstat(fd, &sb) == -1) {
                perror("Error getting file size");
                close(fd);
-               exit(1);
+               return 1;
             }
             int fsize = sb.st_size;
 

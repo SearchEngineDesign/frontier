@@ -74,9 +74,9 @@ class ThreadSafeFrontier {
             return bloom_filter.buildBloomFilter( path );
         }
 
-        int buildFrontier( const char * path ) {
+        int buildFrontier( const char * fpath, const char * bfpath ) {
             HashTable<string, int> weights;
-            FILE *file = fopen(path, "r");
+            FILE *file = fopen(fpath, "r");
             if (file == NULL) {
                 perror("Error opening file");
                 return 1;
@@ -98,7 +98,8 @@ class ThreadSafeFrontier {
 
             free(line); // ? this is never allocated
             fclose(file);
-            return 0;
+
+            return buildBloomFilter(bfpath);
         }
 
         bool contains( const string &s ) 

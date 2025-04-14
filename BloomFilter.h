@@ -22,25 +22,7 @@
 class Bloomfilter
    {
    public:
-      // Bloomfilter( int num_objects, double false_positive_rate )
-      //    {
-
-      //    // Determine the size of bits of our data vector, and resize.
-
-      //    // Use the formula: m = - (n * log(p)) / (log(2)^2)
-
-      //    const unsigned int optimized_size = (int)(- (num_objects * log(false_positive_rate)) / (log(2) * log(2)));
-
-      //    // Determine number of hash functions to use.
-      //    const unsigned int n = (int)( (optimized_size / num_objects) * log(2) );
-         
-      //    this->num_hashes = n;
-      //    bits.resize( optimized_size, false ); 
-
-      //    }
-
-
-
+    
       Bloomfilter()
          {
             this->num_hashes = 0;
@@ -128,7 +110,8 @@ class Bloomfilter
          // Hash the string into two unique hashes.
          // const auto s_new = std::string(s.c_str());
          // Use double hashing to get unique bit, and repeat for each hash function.
-         // WithWriteLock wl(bloom_lock);
+
+         WithWriteLock wl(bloom_lock);
          const auto hashes = crypto.doubleHash(s);
          for ( unsigned int i = 0; i < num_hashes; ++i )
             {
@@ -148,7 +131,7 @@ class Bloomfilter
 
             // If all bits were true, the string is likely inserted, but false positive is possible.
 
-            
+            WithWriteLock wl(bloom_lock);
             const auto hashes = crypto.doubleHash(s);
             for ( unsigned int i = 0; i < num_hashes; ++i ) 
                {
@@ -172,7 +155,7 @@ class Bloomfilter
 
       Crypto crypto;
 
-      // ReaderWriterLock bloom_lock;
+      ReaderWriterLock bloom_lock;
 
 
    

@@ -2,7 +2,7 @@
 
 #include <queue>
 
-#include "../utils/vector.h"
+#include <vector>
 #include "../utils/ParsedUrl.h"
 #include "../utils/string.h"
 #include "../utils/HashTable.h"
@@ -15,7 +15,7 @@
 class UrlQueue {
     
     private:
-        vector<string> urls;
+        std::vector<string> urls;
 
         //? CAN THIS BE A VECTOR ?
         //* YUH BECAUSE ORDERING DOESN:T MATTER IF ITS ALREADY IIN THE POOL
@@ -63,7 +63,7 @@ class UrlQueue {
 
                  // swap the selected url with the last url in the vector to efficiently remote it
                  std::swap(urls[randomIndex], urls[urls.size() - 1]);
-                 urls.popBack(); 
+                 urls.pop_back(); 
 
 
             }
@@ -75,7 +75,7 @@ class UrlQueue {
 
     public:
 
-        vector<string> *getUrls() {
+        std::vector<string> *getUrls() {
             return &urls;
         }
 
@@ -83,7 +83,7 @@ class UrlQueue {
 
         string getUrlAndPop() {
             string s = urls.back();
-            urls.popBack();
+            urls.pop_back();
             dosProtector.updateRequestTime(s);
             return s;
         }
@@ -113,6 +113,18 @@ class UrlQueue {
 
         inline bool vecempty() const {
             return urls.empty();
+        }
+
+        inline int size() const {
+            return urls.size();
+        }
+
+        string &at(int i) {
+            return urls[i];
+        }
+
+        void erase(int i) {
+            urls.erase(urls.begin() + i);
         }
 
 };

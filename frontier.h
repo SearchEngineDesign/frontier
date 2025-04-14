@@ -15,7 +15,6 @@
 
 
 const static int MAX_HOST = 300;
-const static int MAX_DOC = 300000;
 
 class ThreadSafeFrontier {
     
@@ -64,8 +63,10 @@ class ThreadSafeFrontier {
             }
         }
 
-        int writeFrontier(int factor) {
+        int writeFrontier() {
             WithWriteLock wl(rw_lock); 
+            HashTable<string, int> weights;
+
             FILE *file = fopen("./log/frontier/list", "w+");
             if (file == NULL) {
                 perror("Error opening file");
@@ -74,12 +75,18 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             int count = 0;
-            while (!frontier_queue.vecempty() && count < MAX_DOC) {
-                if (rand() % factor == 0)  {
-                    string s = frontier_queue.getUrlAndPop() + endl;
+
+            for (int i = 0; i < frontier_queue.size(); i++) {
+                string s = frontier_queue.at(i);
+                auto w = weights.Find(s, 1);
+                s += endl;
+                if (w->value < MAX_HOST) {
                     fputs(s.c_str(), file);
-                    count++;
-                }
+                    ++w->value;
+                } else {
+                    frontier_queue.erase(i);
+                    i--;
+                }         
             }
 
             fclose(file);
@@ -122,13 +129,11 @@ class ThreadSafeFrontier {
 
         bool contains( const string &s ) 
             {
-                WithWriteLock wl(rw_lock); 
                 return bloom_filter.contains(s);
             }
 
         void blacklist( const string &s ) 
             {
-                WithWriteLock wl(rw_lock); 
                 bloom_filter.insert(s);
             }
 

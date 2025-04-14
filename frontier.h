@@ -215,5 +215,9 @@ class ThreadSafeFrontier {
             // pthread_mutex_destroy(&lock);
         }
 
+        uint32_t size() {
+            return frontier_queue.size();
+        }
+
 };
 

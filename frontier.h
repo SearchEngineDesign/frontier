@@ -12,6 +12,7 @@
 #include <atomic>
 #include "../distrib/URLForwarder.h"
 #include "../distrib/URLReceiver.h"
+#include <memory>
 
 
 const static int MAX_HOST = 300;
@@ -67,11 +68,19 @@ class ThreadSafeFrontier {
             WithWriteLock wl(rw_lock); 
             HashTable<string, int> weights;
 
-            FILE *file = fopen("./log/frontier/list", "w+");
-            if (file == NULL) {
-                perror("Error opening file");
-                return 1;
+            int fd = open("./log/frontier/list", O_TRUNC | O_RDWR);
+            if (fd == -1) {
+               std::cerr << "Error opening file";
+               return 1;
             }
+
+            struct stat sb;
+            if (fstat(fd, &sb) == -1) {
+               perror("Error getting file size");
+               close(fd);
+               return 1;
+            }
+            int fsize = sb.st_size;
 
             string endl("\n");
             int count = 0;
@@ -81,15 +90,15 @@ class ThreadSafeFrontier {
                 auto w = weights.Find(s, 1);
                 s += endl;
                 if (w->value < MAX_HOST) {
-                    fputs(s.c_str(), file);
-                    ++w->value;
+                    write(fd, s.c_str(), s.length());
+                    ++(w->value);
                 } else {
                     frontier_queue.erase(i);
                     i--;
                 }         
             }
 
-            fclose(file);
+            close(fd);
 
             return bloom_filter.writeBloomFilter();
             

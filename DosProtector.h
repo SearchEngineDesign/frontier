@@ -3,32 +3,33 @@
 
 #include <chrono>
 #include <unordered_map>
-#include "../utils/string.h"
-
 
 class DosProtector {
 
     private:
-        static constexpr int TIME_BETWEEN_REQUESTS = 250; // in milliseconds
+        static constexpr int MIN_TIME_BETWEEN_REQUESTS = 500; // in milliseconds
 
         static constexpr int REQUESTS_BEFORE_RESET = 5000;
 
-        std::unordered_map<const char *, uint64_t> lastRequestTime;
+        std::unordered_map<std::string, uint64_t> lastRequestTime;
 
         inline void probabilistically_reset() {
             const int rng = rand() % REQUESTS_BEFORE_RESET;
             if (rng == 0) {
                 lastRequestTime.clear(); // Reset the map
+                lastRequestTime.rehash(8192);
             }
         } 
 
     public:
         DosProtector() = default;
 
-        inline bool isRequestAllowed(const string &url) {
+        inline bool isRequestAllowed(const char * url) {
+            std::string str(url);
+
             probabilistically_reset(); 
             
-            const auto& lastRequest = lastRequestTime.find(url.c_str());;
+            const auto& lastRequest = lastRequestTime.find(str);;
 
             if (lastRequest == lastRequestTime.end()) {
                 return true; // No previous request, allow the request
@@ -41,14 +42,21 @@ class DosProtector {
         
             const auto timeSinceLastRequest = timeInMS - lastRequestTimeInMS;
         
-            return timeSinceLastRequest >= TIME_BETWEEN_REQUESTS;  
+            if (timeSinceLastRequest >= MIN_TIME_BETWEEN_REQUESTS) {
+                return true;
+            } else {
+                std::cerr << "Request to " << url << " not allowed" << std::endl;
+                return false;
+            }
         }
 
-        inline void updateRequestTime(const string &url) {
+        inline void updateRequestTime(const char * url) {
+            std::string str(url);
+
             const auto currentTime = std::chrono::steady_clock::now().time_since_epoch();
             const auto timeInMS = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime).count();
 
-            lastRequestTime[url.c_str()] = timeInMS; // Update the last request time
+            lastRequestTime[str] = timeInMS; // Update the last request time
         }
 
 };

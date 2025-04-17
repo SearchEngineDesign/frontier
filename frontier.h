@@ -37,7 +37,6 @@ class ThreadSafeFrontier {
         unsigned int id;
 
         UrlForwarder urlForwarder;
-        std::unique_ptr<UrlReceiver[]> urlReceivers;  
 
 
     public:
@@ -52,16 +51,9 @@ class ThreadSafeFrontier {
             returnEmpty(false),
             numNodes(numNodes),
             id(id),
-            urlForwarder(numNodes, id), 
-            urlReceivers(new UrlReceiver[numNodes]) 
+            urlForwarder(numNodes, id)
         {
-            for (size_t i = 0; i < numNodes; i++) {
-                if(i == id) {
-                    new (&urlReceivers[i]) UrlReceiver(i, 8080, this);
-                } else {
-                    // urlReceivers.push_back(nullptr);
-                }
-            }
+            
         }
 
         int writeFrontier() {
@@ -150,7 +142,7 @@ class ThreadSafeFrontier {
             {
                 WithWriteLock wl(rw_lock); 
 
-                const int urlOwner = urlForwarder.addUrl(s);
+                const int urlOwner = urlForwarder.addUrl(s).first;
                 
                 if (urlOwner == id) {
                     insertWithutForwarding(s);

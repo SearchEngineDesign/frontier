@@ -4,7 +4,7 @@
 
 #include <vector>
 #include "../utils/ParsedUrl.h"
-#include "../utils/string.h"
+#include "../utils/searchstring.h"
 #include "../utils/HashTable.h"
 #include "../ranker/StaticRanker.h"
 

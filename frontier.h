@@ -51,8 +51,8 @@ class ThreadSafeFrontier {
                 frontier_queue.addUrl(s);
             }
             ++runningCount;
-            //if (runningCount > WRITE_TURNOVER)
-                //writeFrontier();
+            if (runningCount > WRITE_TURNOVER)
+                writeFrontier();
         }
 
 

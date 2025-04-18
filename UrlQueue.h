@@ -131,8 +131,9 @@ class UrlQueue {
             return urls[i];
         }
 
-        void erase(int i) {
-            urls.erase(urls.begin() + i);
+        inline void erase(int i) {
+            std::swap(urls[urls.size() - 1], urls[i]);
+            urls.pop_back();
         }
 
 };

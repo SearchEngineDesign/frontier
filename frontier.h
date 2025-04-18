@@ -13,9 +13,12 @@
 #include "../distrib/URLForwarder.h"
 #include "../distrib/URLReceiver.h"
 #include <memory>
-
+#include "../parser/HtmlParser.h"
+#include <atomic>
+#include <fstream>
 
 const static int MAX_HOST = 300;
+const static int WRITE_TURNOVER = 500000;
 
 class ThreadSafeFrontier {
     
@@ -36,7 +39,21 @@ class ThreadSafeFrontier {
         unsigned int numNodes;
         unsigned int id;
 
+        size_t runningCount = 0;
+
         UrlForwarder urlForwarder;
+
+
+        inline void insertNoLock(const string &s) {
+            const auto [urlOwner, alreadySeen] = urlForwarder.addUrl(s);
+            
+            if (urlOwner == id && alreadySeen == false) {
+                frontier_queue.addUrl(s);
+            }
+            ++runningCount;
+            //if (runningCount > WRITE_TURNOVER)
+                //writeFrontier();
+        }
 
 
     public:
@@ -58,7 +75,7 @@ class ThreadSafeFrontier {
 
         int writeFrontier() {
             WithWriteLock wl(rw_lock); 
-            HashTable<string, int> weights;
+            std::unordered_map<std::string, int> weights;
 
             int fd = open("./log/frontier/list", O_TRUNC | O_RDWR);
             if (fd == -1) {
@@ -79,11 +96,15 @@ class ThreadSafeFrontier {
 
             for (int i = 0; i < frontier_queue.size(); i++) {
                 string s = frontier_queue.at(i);
-                auto w = weights.Find(s, 1);
+                std::string s2(s.cstr(), s.size());
+                auto w = weights.find(s2);
+                if (w == weights.end())
+                    weights[s2] = 1;
+                
                 s += endl;
-                if (w->value < MAX_HOST) {
+                if (w->second < MAX_HOST) {
                     write(fd, s.c_str(), s.length());
-                    ++(w->value);
+                    ++(w->second);
                 } else {
                     frontier_queue.erase(i);
                     i--;
@@ -101,29 +122,19 @@ class ThreadSafeFrontier {
         }
 
         int buildFrontier( const char * fpath, const char * bfpath ) {
-            HashTable<string, int> weights;
-            FILE *file = fopen(fpath, "r");
-            if (file == NULL) {
-                perror("Error opening file");
+            std::ifstream file(fpath);
+            std::string line;
+
+            if (file.is_open()) {
+                while (std::getline(file, line)) {
+                    if (line.size() > 8)
+                        insert(string(line.c_str()));
+                }
+                file.close();
+            } else {
+                std::cerr << "Unable to open file" << std::endl;
                 return 1;
             }
-
-            char *line = NULL;
-            size_t len = 0;
-            ssize_t read;
-
-            while ((read = getline(&line, &len, file)) != -1) {
-                string s(line);
-                s = s.substr(0, s.size() - 1);
-                auto *i = weights.Find(ParsedUrl(s).Host, 0);
-                if (i->value < MAX_HOST && s.size() > 0) {
-                    insert(s); 
-                    ++i->value;
-                }   
-            }
-
-            free(line); // ? this is never allocated
-            fclose(file);
 
             return buildBloomFilter(bfpath);
         }
@@ -138,33 +149,33 @@ class ThreadSafeFrontier {
                 bloom_filter.insert(s);
             }
 
-        void insert( const string &s ) {
+        inline void insert( const string &s ) {
             {
                 WithWriteLock wl(rw_lock); 
-
-                const int urlOwner = urlForwarder.addUrl(s).first;
-                
-                if (urlOwner == id) {
-                    insertWithutForwarding(s);
-                }
-
+                insertNoLock(s);
+                pthread_cond_signal(&cv);
             }
         }
 
-        inline void insertWithutForwarding(const string &s) {
+        void insert( const vector<string> &links ) {
             {
-
-                // !WARNING: THIS IS NOT THREAD SAFE, DO NOT CALL OUTSIDE OF INSERT
-
-                if ( !bloom_filter.contains(s) ) {
-                    frontier_queue.addUrl(s);
-                    bloom_filter.insert(s);
-                    pthread_cond_signal(&cv);
+                WithWriteLock wl(rw_lock); 
+                for (const auto &link : links) {
+                    insertNoLock(link);
                 }
+                pthread_cond_broadcast(&cv); // Notify all waiting threads
             }
-
         }
 
+        void insert( const vector<Link> &links ) {
+            {
+                WithWriteLock wl(rw_lock); 
+                for (const auto &link : links) {
+                    insertNoLock(link.URL);
+                }
+                pthread_cond_broadcast(&cv); // Notify all waiting threads
+            }
+        }
 
         void startReturningEmpty() {
             returnEmpty = true;

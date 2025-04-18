@@ -105,7 +105,7 @@ class Bloomfilter
          }
 
 
-      void insert( const string s)
+      inline void insert( const string& s)
          {
          // Hash the string into two unique hashes.
          // const auto s_new = std::string(s.c_str());
@@ -122,7 +122,7 @@ class Bloomfilter
 
 
 
-      bool contains( const string s ) 
+      inline bool contains( const string& s ) 
          {
             // Hash the string into two unqiue hashes.
 

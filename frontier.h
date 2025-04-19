@@ -39,7 +39,7 @@ class ThreadSafeFrontier {
         unsigned int numNodes;
         unsigned int id;
 
-        size_t runningCount = 0;
+        std::atomic<size_t> runningCount = 0;
 
         UrlForwarder urlForwarder;
 
@@ -50,8 +50,6 @@ class ThreadSafeFrontier {
             if (urlOwner == id && alreadySeen == false) {
                 frontier_queue.addUrl(s);
             }
-            ++runningCount;
-
         }
 
 
@@ -165,6 +163,7 @@ class ThreadSafeFrontier {
             {
                 WithWriteLock wl(rw_lock); 
                 for (const auto &link : links) {
+                    ++runningCount;
                     insertNoLock(link.URL);
                 }
                 if (runningCount > WRITE_TURNOVER) {

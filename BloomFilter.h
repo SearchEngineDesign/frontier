@@ -53,12 +53,12 @@ class Bloomfilter
 
          int buildBloomFilter( const char * path ) {
 
+
             int fd = open(path, O_RDONLY );
             if (fd == -1) {
                std::cerr << "Error opening bloom filter";
                return 1;
             }
-
             struct stat sb;
             if (fstat(fd, &sb) == -1) {
                perror("Error getting file size");
@@ -66,12 +66,11 @@ class Bloomfilter
                return 1;
             }
             int fsize = sb.st_size;
-
             int pos = 0;
             while (pos < bits.size() / 8 && pos < fsize) {
                read(fd, bits.data() + pos, 1);
                pos += 1;
-            }
+            } 
 
             close(fd);
             return 0;

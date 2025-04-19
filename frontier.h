@@ -51,8 +51,7 @@ class ThreadSafeFrontier {
                 frontier_queue.addUrl(s);
             }
             ++runningCount;
-            if (runningCount > WRITE_TURNOVER)
-                writeFrontier();
+
         }
 
 
@@ -74,7 +73,7 @@ class ThreadSafeFrontier {
         }
 
         int writeFrontier() {
-            WithWriteLock wl(rw_lock); 
+            std::cout << "writing frontier" << std::endl;
             std::unordered_map<std::string, int> weights;
 
             int fd = open("./log/frontier/list", O_TRUNC | O_RDWR);
@@ -96,15 +95,12 @@ class ThreadSafeFrontier {
 
             for (int i = 0; i < frontier_queue.size(); i++) {
                 string s = frontier_queue.at(i);
-                std::string s2(s.cstr(), s.size());
-                auto w = weights.find(s2);
-                if (w == weights.end())
-                    weights[s2] = 1;
-                
+                std::string s2 = s.c_str();
+                int& weight = weights[s2];  
                 s += endl;
-                if (w->second < MAX_HOST) {
+                if (weight < MAX_HOST) {
                     write(fd, s.c_str(), s.length());
-                    ++(w->second);
+                    ++weight;
                 } else {
                     frontier_queue.erase(i);
                     i--;
@@ -124,7 +120,6 @@ class ThreadSafeFrontier {
         int buildFrontier( const char * fpath, const char * bfpath ) {
             std::ifstream file(fpath);
             std::string line;
-
             if (file.is_open()) {
                 while (std::getline(file, line)) {
                     if (line.size() > 8)
@@ -135,7 +130,6 @@ class ThreadSafeFrontier {
                 std::cerr << "Unable to open file" << std::endl;
                 return 1;
             }
-
             return buildBloomFilter(bfpath);
         }
 
@@ -172,6 +166,10 @@ class ThreadSafeFrontier {
                 WithWriteLock wl(rw_lock); 
                 for (const auto &link : links) {
                     insertNoLock(link.URL);
+                }
+                if (runningCount > WRITE_TURNOVER) {
+                    runningCount = 0;
+                    writeFrontier();
                 }
                 pthread_cond_broadcast(&cv); // Notify all waiting threads
             }

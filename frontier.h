@@ -18,7 +18,8 @@
 #include <fstream>
 
 const static int MAX_HOST = 300;
-const static int WRITE_TURNOVER = 500000;
+//const static int WRITE_TURNOVER = 500000;
+const static int MAX_WRITE = 1000000;
 
 class ThreadSafeFrontier {
     
@@ -46,8 +47,9 @@ class ThreadSafeFrontier {
 
         inline void insertNoLock(const string &s) {
             const auto [urlOwner, alreadySeen] = urlForwarder.addUrl(s);
-            
-            if (urlOwner == id && alreadySeen == false) {
+        
+            if (urlOwner == id && !bloom_filter.contains(s)) {
+                bloom_filter.insert(s);
                 frontier_queue.addUrl(s);
             }
         }
@@ -90,8 +92,9 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             int count = 0;
+            size_t limit = std::min(frontier_queue.size(), MAX_WRITE);
 
-            for (int i = 0; i < frontier_queue.size(); i++) {
+            for (int i = 0; i < limit; i++) {
                 string s = frontier_queue.at(i);
                 std::string s2 = s.c_str();
                 int& weight = weights[s2];  
@@ -149,6 +152,17 @@ class ThreadSafeFrontier {
             }
         }
 
+        inline void insertWithoutForward( const string &s ) {
+            {
+                WithWriteLock wl(rw_lock); 
+                if (!bloom_filter.contains(s) == false) {
+                    bloom_filter.insert(s);
+                    frontier_queue.addUrl(s);
+                }
+                pthread_cond_signal(&cv);
+            }
+        }
+
         void insert( const vector<string> &links ) {
             {
                 WithWriteLock wl(rw_lock); 
@@ -163,13 +177,13 @@ class ThreadSafeFrontier {
             {
                 WithWriteLock wl(rw_lock); 
                 for (const auto &link : links) {
-                    ++runningCount;
+                    //++runningCount;
                     insertNoLock(link.URL);
                 }
-                if (runningCount > WRITE_TURNOVER) {
+                /* if (runningCount > WRITE_TURNOVER) {
                     runningCount = 0;
                     writeFrontier();
-                }
+                } */
                 pthread_cond_broadcast(&cv); // Notify all waiting threads
             }
         }

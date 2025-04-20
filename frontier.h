@@ -44,7 +44,7 @@ class ThreadSafeFrontier {
 
         // MODIFY THIS TO SELECT FOR CERTAIN SITES
         const char * filter[4] = {"en.wikipedia", "stackoverflow", "reddit.com", "brittanica"};
-        bool ignorefilter = false;
+        bool ignorefilter = true;
 
         inline bool frontierfilter(const string &s) {
             for (auto &i : filter) {

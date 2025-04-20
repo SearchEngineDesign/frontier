@@ -24,7 +24,6 @@ const static int MAX_WRITE = 1000000;
 class ThreadSafeFrontier {
     
     private:
-        // std::queue<string> frontier_queue;
         UrlQueue frontier_queue; 
         Bloomfilter bloom_filter;
 
@@ -34,8 +33,7 @@ class ThreadSafeFrontier {
 
         std::atomic<bool> returnEmpty;
         
-        
-    // urlForwarder(numNodes, id, NUM_OBJECTS, ERROR_RATE),
+        string fpath;
 
         unsigned int numNodes;
         unsigned int id;
@@ -44,14 +42,28 @@ class ThreadSafeFrontier {
 
         UrlForwarder urlForwarder;
 
+        // MODIFY THIS TO SELECT FOR CERTAIN SITES
+        const char * filter[1] = {"wikipedia"};
+        bool ignorefilter = true;
+
+        inline bool frontierfilter(const string &s) {
+            for (auto &i : filter) {
+                if (s.contains(i))
+                    return true;
+            }
+            return false;
+        }
+
 
         inline void insertNoLock(const string &s) {
-            const auto [urlOwner, alreadySeen] = urlForwarder.addUrl(s);
+            if (frontierfilter(s) || ignorefilter) {
+                const auto [urlOwner, alreadySeen] = urlForwarder.addUrl(s);
         
-            if (urlOwner == id && !bloom_filter.contains(s)) {
-                bloom_filter.insert(s);
-                frontier_queue.addUrl(s);
-            }
+                if (urlOwner == id && !bloom_filter.contains(s)) {
+                    bloom_filter.insert(s);
+                    frontier_queue.addUrl(s);
+                }
+            } 
         }
 
 
@@ -76,7 +88,7 @@ class ThreadSafeFrontier {
             std::cout << "writing frontier" << std::endl;
             std::unordered_map<std::string, int> weights;
 
-            int fd = open("./log/frontier/list", O_TRUNC | O_RDWR);
+            int fd = open(fpath.c_str(), O_TRUNC | O_RDWR);
             if (fd == -1) {
                std::cerr << "Error opening file";
                return 1;
@@ -118,8 +130,9 @@ class ThreadSafeFrontier {
             return bloom_filter.buildBloomFilter( path );
         }
 
-        int buildFrontier( const char * fpath, const char * bfpath ) {
-            std::ifstream file(fpath);
+        int buildFrontier( const char * fpath_in, const char * bfpath ) {
+            fpath = string(fpath_in);
+            std::ifstream file(fpath.c_str());
             std::string line;
             if (file.is_open()) {
                 while (std::getline(file, line)) {
@@ -177,13 +190,8 @@ class ThreadSafeFrontier {
             {
                 WithWriteLock wl(rw_lock); 
                 for (const auto &link : links) {
-                    //++runningCount;
                     insertNoLock(link.URL);
                 }
-                /* if (runningCount > WRITE_TURNOVER) {
-                    runningCount = 0;
-                    writeFrontier();
-                } */
                 pthread_cond_broadcast(&cv); // Notify all waiting threads
             }
         }

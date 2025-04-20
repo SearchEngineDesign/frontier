@@ -41,25 +41,13 @@ class UrlQueue {
                 const unsigned int randomIndex = rand() % urls.size();
                 const string& selectedUrl = urls[randomIndex];
                 string curr = ParsedUrl(selectedUrl).Host;
-                // if (!dosProtector.isRequestAllowed(curr.c_str()))
-                //     continue; // skip this URL if the request is not allowed
+               
 
                 count++;
 
 
-                // if (urlPool.size() < MAX_POOL_SIZE) {
                 urlPool.push(selectedUrl);
                    
-                // } else if (StaticRanker()(selectedUrl, urlPool.top())) {
-
-                //     urls.push_back(urlPool.top()); // Add the worst-ranked URL back to the pool
-
-                //     urlPool.pop();         // Remove worst-ranked from the pool
-                //     urlPool.push(selectedUrl);     // Insert better one
-                // } else {
-                //     continue; // skip this URL if it is not better than the worst-ranked one
-                // }
-
                  // swap the selected url with the last url in the vector to efficiently remote it
                 std::swap(urls[randomIndex], urls[urls.size() - 1]);
                 urls.pop_back(); 
@@ -116,7 +104,7 @@ class UrlQueue {
         }
 
         inline bool empty() const {
-            return urls.empty() && urlPool.empty();
+            return urls.empty() and urlPool.empty();
         }
 
         inline bool vecempty() const {
@@ -124,7 +112,7 @@ class UrlQueue {
         }
 
         inline int size() const {
-            return urls.size();
+            return (urls.size() + urlPool.size());
         }
 
         string &at(int i) {

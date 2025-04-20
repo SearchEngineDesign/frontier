@@ -92,7 +92,7 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             int count = 0;
-            size_t limit = std::min(frontier_queue.size(), MAX_WRITE);
+            size_t limit = frontier_queue.size(); //std::min(frontier_queue.size(), MAX_WRITE);
 
             for (int i = 0; i < limit; i++) {
                 string s = frontier_queue.at(i);

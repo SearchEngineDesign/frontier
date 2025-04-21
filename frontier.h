@@ -43,7 +43,7 @@ class ThreadSafeFrontier {
         UrlForwarder urlForwarder;
 
         // MODIFY THIS TO SELECT FOR CERTAIN SITES
-        const char * filter[4] = {"en.wikipedia", "stackoverflow", "reddit.com", "brittanica"};
+        const char * filter[4] = {"en.wikipedia", "stackoverflow", "reddit.com", "Britannica"};
         bool ignorefilter = true;
 
         inline bool frontierfilter(const string &s) {

@@ -111,6 +111,8 @@ class Bloomfilter
          // Use double hashing to get unique bit, and repeat for each hash function.
 
          WithWriteLock wl(bloom_lock);
+         if (s.size() == 0)
+            return;
          const auto hashes = crypto.doubleHash(s);
          for ( unsigned int i = 0; i < num_hashes; ++i )
             {
@@ -131,6 +133,8 @@ class Bloomfilter
             // If all bits were true, the string is likely inserted, but false positive is possible.
 
             WithWriteLock wl(bloom_lock);
+            if (s.size() == 0)
+               return false;
             const auto hashes = crypto.doubleHash(s);
             for ( unsigned int i = 0; i < num_hashes; ++i ) 
                {

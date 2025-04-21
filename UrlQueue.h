@@ -8,8 +8,6 @@
 #include "../utils/HashTable.h"
 #include "../ranker/StaticRanker.h"
 
-#include "DosProtector.h"
-
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
@@ -21,7 +19,6 @@ class UrlQueue {
         //* YUH BECAUSE ORDERING DOESN:T MATTER IF ITS ALREADY IIN THE POOL
         std::priority_queue<string, std::vector<string>, StaticRanker> urlPool;
 
-        DosProtector dosProtector;
         
         static constexpr size_t MAX_POOL_CANDIDATES = 20000;
         static constexpr size_t MAX_POOL_SIZE = 5000;

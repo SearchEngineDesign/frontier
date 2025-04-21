@@ -16,6 +16,7 @@
 #include "../parser/HtmlParser.h"
 #include <atomic>
 #include <fstream>
+#include <unordered_map>
 
 const static int MAX_HOST = 300;
 //const static int WRITE_TURNOVER = 500000;
@@ -43,7 +44,17 @@ class ThreadSafeFrontier {
         UrlForwarder urlForwarder;
 
         // MODIFY THIS TO SELECT FOR CERTAIN SITES
-        const char * filter[4] = {"en.wikipedia", "stackoverflow", "reddit.com", "Britannica"};
+        const char * filter[10] = {
+            "en.wikipedia", 
+            "stackoverflow", 
+            "reddit.com", 
+            "Britannica",
+            "stanford",
+            "archive",
+            "jstor",
+            "amazon",
+            "ebay",
+            "gutenberg"};
         bool ignorefilter = true;
 
         inline bool frontierfilter(const string &s) {
@@ -56,7 +67,7 @@ class ThreadSafeFrontier {
 
 
         inline void insertNoLock(const string &s) {
-            if (frontierfilter(s) || ignorefilter) {
+            if (ignorefilter || frontierfilter(s)) {
                 const auto [urlOwner, alreadySeen] = urlForwarder.addUrl(s);
         
                 if (urlOwner == id && !bloom_filter.contains(s)) {

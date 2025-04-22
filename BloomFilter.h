@@ -93,9 +93,14 @@ class Bloomfilter
             int fsize = sb.st_size;
 
             int pos = 0;
-            while (pos < bits.size()) {
-               char *c = reinterpret_cast<char*>(bits.data() + pos);
-               write(fd, c, 1);
+            while (pos < bits.size() - 8) {
+               uint8_t byte_value = 0;
+               for (int i = 0; i < 8; ++i) {
+                  if (bits[pos + i]) {
+                     byte_value |= (1 << i); // Set the i-th bit if bool_array[i] is true
+                  }
+               }
+               write(fd, &byte_value, 1);
                pos += 8;
             }
 

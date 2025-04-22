@@ -60,8 +60,8 @@ class ThreadSafeFrontier {
             "nytimes",
             "="
         };
-        float factor = 0.7;
-        // ON/OFF SWITCH
+        float factor = 0.2;
+        //TODO: turn this to false
         bool ignorefilter = true;
 
         inline bool frontierfilter(const string &s) {
@@ -69,14 +69,13 @@ class ThreadSafeFrontier {
                 if (s.contains(i))
                     return false;
             }
+            if (((double)rand() / (double)RAND_MAX) < factor) 
+                return true;
             for (auto &i : filter) {
                 if (s.contains(i))
                     return true;
             }
-            if (((double)rand() / (double)RAND_MAX) < factor) 
-                return false;
-            else
-                return true;
+            return true;
         }
 
 
@@ -146,7 +145,6 @@ class ThreadSafeFrontier {
             }
 
             close(fd);
-
             return bloom_filter.writeBloomFilter();
             
         }

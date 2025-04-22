@@ -54,15 +54,27 @@ class ThreadSafeFrontier {
             "jstor",
             "amazon",
             "ebay",
-            "gutenberg"};
-        bool ignorefilter = true;
+            "gutenberg",};
+        const char * fblacklist[2] = {
+            "wn.com",
+            "nytimes"
+        };
+        float factor = 0.7;
+        bool ignorefilter = false;
 
         inline bool frontierfilter(const string &s) {
+            for (auto &i : fblacklist) {
+                if (s.contains(i))
+                    return false;
+            }
             for (auto &i : filter) {
                 if (s.contains(i))
                     return true;
             }
-            return false;
+            if (((double)rand() / RAND_MAX) < factor)
+                return false;
+            else
+                return true;
         }
 
 

@@ -15,6 +15,8 @@ class UrlQueue {
     private:
         std::vector<string> urls;
 
+        //? CAN THIS BE A VECTOR ?
+        //* YUH BECAUSE ORDERING DOESN:T MATTER IF ITS ALREADY IIN THE POOL
         std::priority_queue<string, std::vector<string>, StaticRanker> urlPool;
 
         
@@ -24,9 +26,10 @@ class UrlQueue {
         void fillUrlPool() {
             // select random K urls from urls and add them to urlPool
             
+            // TODO: select N links and statically rank them to select the top K
 
-            const size_t k = std::min(urls.size(), MAX_POOL_SIZE);
-            const size_t N = std::min(urls.size(), MAX_POOL_CANDIDATES);
+            const int k = std::min(urls.size(), MAX_POOL_SIZE);
+            const int N = std::min(urls.size(), MAX_POOL_CANDIDATES);
 
 
             unsigned int count = 0;
@@ -41,10 +44,12 @@ class UrlQueue {
 
 
                 urlPool.push(selectedUrl);
-
+                   
                  // swap the selected url with the last url in the vector to efficiently remote it
                 std::swap(urls[randomIndex], urls[urls.size() - 1]);
                 urls.pop_back(); 
+
+
             }
 
             for (int i = 0; i < (N - k); i++) {
@@ -53,7 +58,9 @@ class UrlQueue {
                 urlPool.pop();
             }
                 
+
             // remaining 5000 urls are sorted in reverse
+
         }
 
     public:
@@ -78,10 +85,17 @@ class UrlQueue {
                 fillUrlPool();
             }
 
-            string nextUrl;
-
-            nextUrl = urlPool.top();
-            urlPool.pop();
+            string nextUrl, curr;
+            // do {
+                nextUrl = urlPool.top();
+                urlPool.pop();
+                curr = ParsedUrl(nextUrl).Host;
+            //     if (dosProtector.isRequestAllowed(curr.c_str()))
+            //         break;
+            //     urls.push_back(nextUrl);
+            // } while(true);
+            
+            //dosProtector.updateRequestTime(curr.c_str());
 
             return nextUrl;
         }
@@ -94,7 +108,7 @@ class UrlQueue {
             return urls.empty();
         }
 
-        inline size_t size() const {
+        inline int size() const {
             return (urls.size() + urlPool.size());
         }
 

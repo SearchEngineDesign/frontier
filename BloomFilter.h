@@ -23,14 +23,16 @@ class Bloomfilter
    {
    public:
     
-      Bloomfilter(): num_hashes(0) {}
+      Bloomfilter()
+         {
+            this->num_hashes = 0;
+         }
 
-      explicit Bloomfilter(bool construct) {
+      Bloomfilter(bool construct) {
          if (!construct) {
             this->num_hashes = 0;
             return;
          } 
-
 
          // Determine the size of bits of our data vector, and resize.
 
@@ -46,7 +48,8 @@ class Bloomfilter
          
       }
 
-         ~Bloomfilter() = default;
+         ~Bloomfilter() {
+         }
 
          int buildBloomFilter( const char * path ) {
 
@@ -118,7 +121,7 @@ class Bloomfilter
          const auto hashes = crypto.doubleHash(s);
          for ( unsigned int i = 0; i < num_hashes; ++i )
             {
-            const unsigned long index = ( (hashes.first + i * hashes.second) % bits.size() );
+            const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
             bits[index] = true; 
             }
          }
@@ -140,7 +143,7 @@ class Bloomfilter
             const auto hashes = crypto.doubleHash(s);
             for ( unsigned int i = 0; i < num_hashes; ++i ) 
                {
-                  const unsigned long index = ( (hashes.first + i * hashes.second) % bits.size() );
+                  const unsigned int index = ( (hashes.first + i * hashes.second) % bits.size() );
                   if ( !bits[index] ) return false; 
                }
             return true;
@@ -162,6 +165,8 @@ class Bloomfilter
 
       ReaderWriterLock bloom_lock;
 
+
+   
    };
 
 #endif

@@ -55,14 +55,14 @@ class ThreadSafeFrontier {
             "amazon",
             "ebay",
             "gutenberg",};
-        const char * fblacklist[4] = {
+        const char * fblacklist[5] = {
             "wn.com",
             "nytimes",
             "=",
             "tcrf,"
             "colorhexa"
         };
-        float factor = 0.9;
+        float factor = 1.0;
         //TODO: turn this to false
         bool ignorefilter = false;
 

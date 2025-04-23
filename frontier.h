@@ -55,14 +55,16 @@ class ThreadSafeFrontier {
             "amazon",
             "ebay",
             "gutenberg",};
-        const char * fblacklist[3] = {
+        const char * fblacklist[4] = {
             "wn.com",
             "nytimes",
-            "="
+            "=",
+            "tcrf,"
+            "colorhexa"
         };
-        float factor = 0.2;
+        float factor = 0.9;
         //TODO: turn this to false
-        bool ignorefilter = true;
+        bool ignorefilter = false;
 
         inline bool frontierfilter(const string &s) {
             for (auto &i : fblacklist) {
@@ -109,8 +111,8 @@ class ThreadSafeFrontier {
         }
 
         int writeFrontier() {
+            WithWriteLock wl(rw_lock); 
             std::cout << "writing frontier" << std::endl;
-            std::unordered_map<std::string, int> weights;
 
             int fd = open(fpath.c_str(), O_TRUNC | O_RDWR);
             if (fd == -1) {
@@ -128,21 +130,14 @@ class ThreadSafeFrontier {
 
             string endl("\n");
             int count = 0;
-            size_t limit = frontier_queue.size(); //std::min(frontier_queue.size(), MAX_WRITE);
+            std::vector<string> *urls = frontier_queue.getUrls();
 
-            for (int i = 0; i < limit; i++) {
+            for (int i = 0; i < urls->size(); i++) {
                 string s = frontier_queue.at(i);
-                std::string s2 = s.c_str();
-                int& weight = weights[s2];  
                 s += endl;
-                if (weight < MAX_HOST) {
-                    write(fd, s.c_str(), s.length());
-                    ++weight;
-                } else {
-                    frontier_queue.erase(i);
-                    i--;
-                }         
+                write(fd, s.c_str(), s.length());       
             }
+            std::cout << "Finished writing to frontier!" << std::endl;
 
             close(fd);
             return bloom_filter.writeBloomFilter();

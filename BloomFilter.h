@@ -77,7 +77,7 @@ class Bloomfilter
          }
 
          int writeBloomFilter() {
-
+            WithWriteLock wl(bloom_lock); 
             int fd = open("./log/frontier/bloomfilter.bin", O_TRUNC | O_RDWR );
             if (fd == -1) {
                std::cerr << "Error opening bloom filter";

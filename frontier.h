@@ -60,7 +60,8 @@ class ThreadSafeFrontier {
             "nytimes",
             "=",
             "tcrf,"
-            "colorhexa"
+            "colorhexa",
+            "dictionaries24"
         };
         float factor = 1.0;
         //TODO: turn this to false

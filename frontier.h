@@ -44,7 +44,7 @@ class ThreadSafeFrontier {
         UrlForwarder urlForwarder;
 
         // MODIFY THIS TO SELECT FOR CERTAIN SITES
-        const char * filter[10] = {
+        const char * filter[12] = {
             "en.wikipedia", 
             "stackoverflow", 
             "reddit.com", 
@@ -54,8 +54,11 @@ class ThreadSafeFrontier {
             "jstor",
             "amazon",
             "ebay",
-            "gutenberg",};
-        const char * fblacklist[8] = {
+            "gutenberg",
+            "forbes",
+            "business"
+            };
+        const char * fblacklist[10] = {
             "wn.com",
             "nytimes",
             "=",
@@ -63,13 +66,17 @@ class ThreadSafeFrontier {
             "colorhexa",
             "dictionaries24",
             "porn",
-            "xxx"
+            "xxx",
+            "spokeo",
+            "freeblack"
         };
-        float factor = 1.0;
+        float factor = 0.6;
         //TODO: turn this to false
         bool ignorefilter = false;
 
         inline bool frontierfilter(const string &s) {
+            if (!s.contains("https"))
+                return false;
             for (auto &i : fblacklist) {
                 if (s.contains(i))
                     return false;

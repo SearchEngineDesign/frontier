@@ -3,11 +3,10 @@
 #include <queue>
 
 #include <vector>
-#include "../utils/ParsedUrl.h"
-#include "../utils/searchstring.h"
-#include "../utils/HashTable.h"
 #include "../ranker/StaticRanker.h"
 
+
+#include <cf/ParsedUrl.h>
 
 // Data Structure that abstracts random K access to a queue of URLs
 class UrlQueue {
@@ -25,11 +24,9 @@ class UrlQueue {
 
         void fillUrlPool() {
             // select random K urls from urls and add them to urlPool
-            
-            // TODO: select N links and statically rank them to select the top K
 
-            const int k = std::min(urls.size(), MAX_POOL_SIZE);
-            const int N = std::min(urls.size(), MAX_POOL_CANDIDATES);
+            const size_t k = std::min(urls.size(), MAX_POOL_SIZE);
+            const size_t N = std::min(urls.size(), MAX_POOL_CANDIDATES);
 
 
             unsigned int count = 0;
@@ -86,17 +83,9 @@ class UrlQueue {
             }
 
             string nextUrl, curr;
-            // do {
-                nextUrl = urlPool.top();
-                urlPool.pop();
-                curr = ParsedUrl(nextUrl).Host;
-            //     if (dosProtector.isRequestAllowed(curr.c_str()))
-            //         break;
-            //     urls.push_back(nextUrl);
-            // } while(true);
-            
-            //dosProtector.updateRequestTime(curr.c_str());
-
+            nextUrl = urlPool.top();
+            urlPool.pop();
+            curr = ParsedUrl(nextUrl).Host;
             return nextUrl;
         }
 

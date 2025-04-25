@@ -9,14 +9,15 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#include "../utils/vector.h"
+#include <cf/vec.h>
+#include <cf/crypto.h>
+
 #include "../frontier/ReaderWriterLock.h"
 
 #include <utility>
 #include <cassert>
 
 
-#include "../utils/crypto.h"
 
 
 class Bloomfilter

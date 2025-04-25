@@ -1,6 +1,5 @@
 #pragma once
 
-// #include <queue>
 #include "BloomFilter.h"
 
 #include "ReaderWriterLock.h"

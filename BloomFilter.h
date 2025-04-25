@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#include <cf/vec.h>
+// #include <cf/vec.h>
 #include <cf/crypto.h>
 
 // #include "../frontier/ReaderWriterLock.h"
@@ -20,6 +20,8 @@
 
 #include <utility>
 #include <cassert>
+
+#include <vector>
 
 
 
@@ -53,10 +55,9 @@ class Bloomfilter
          
       }
 
-         ~Bloomfilter() {
-         }
+      ~Bloomfilter() = default;
 
-         int buildBloomFilter( const char * path ) {
+      int buildBloomFilter( const char * path ) {
 
 
             int fd = open(path, O_RDONLY );
@@ -73,7 +74,9 @@ class Bloomfilter
             int fsize = sb.st_size;
             int pos = 0;
             while (pos < bits.size() / 8 && pos < fsize) {
-               read(fd, bits.data() + pos, 1);
+               bool val = false;
+               read(fd, &val, 1);
+               bits.push_back(val);
                pos += 1;
             } 
 
@@ -169,7 +172,7 @@ class Bloomfilter
       unsigned int num_hashes;
       // unsigned int optimized_size;
 
-      vector<bool> bits; 
+      std::vector<bool> bits; 
 
       Crypto crypto;
 

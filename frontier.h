@@ -55,13 +55,15 @@ class ThreadSafeFrontier {
             "amazon",
             "ebay",
             "gutenberg",};
-        const char * fblacklist[5] = {
+        const char * fblacklist[8] = {
             "wn.com",
             "nytimes",
             "=",
-            "tcrf,"
+            "tcrf",
             "colorhexa",
-            "dictionaries24"
+            "dictionaries24",
+            "porn",
+            "xxx"
         };
         float factor = 1.0;
         //TODO: turn this to false
@@ -78,7 +80,7 @@ class ThreadSafeFrontier {
                 if (s.contains(i))
                     return true;
             }
-            return true;
+            return false;
         }
 
 

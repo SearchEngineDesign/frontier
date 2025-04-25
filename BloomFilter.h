@@ -12,7 +12,11 @@
 #include <cf/vec.h>
 #include <cf/crypto.h>
 
-#include "../frontier/ReaderWriterLock.h"
+// #include "../frontier/ReaderWriterLock.h"
+
+#include <cf/threading/cfmutex.h>
+#include <cf/threading/cfguard.h>
+
 
 #include <utility>
 #include <cassert>
@@ -78,7 +82,9 @@ class Bloomfilter
          }
 
          int writeBloomFilter() {
-            WithWriteLock wl(bloom_lock); 
+            // WithWriteLock wl(bloom_lock);
+            cf::Guard g(bloom_lock);
+
             int fd = open("./log/frontier/bloomfilter.bin", O_TRUNC | O_RDWR );
             if (fd == -1) {
                std::cerr << "Error opening bloom filter";
@@ -116,7 +122,9 @@ class Bloomfilter
          // const auto s_new = std::string(s.c_str());
          // Use double hashing to get unique bit, and repeat for each hash function.
 
-         WithWriteLock wl(bloom_lock);
+         // WithWriteLock wl(bloom_lock);
+         cf::Guard g(bloom_lock);
+
          if (s.size() == 0)
             return;
          const auto hashes = crypto.doubleHash(s);
@@ -138,7 +146,8 @@ class Bloomfilter
 
             // If all bits were true, the string is likely inserted, but false positive is possible.
 
-            WithWriteLock wl(bloom_lock);
+            cf::Guard g(bloom_lock);
+
             if (s.size() == 0)
                return false;
             const auto hashes = crypto.doubleHash(s);
@@ -164,7 +173,8 @@ class Bloomfilter
 
       Crypto crypto;
 
-      ReaderWriterLock bloom_lock;
+      // ReaderWriterLock bloom_lock;
+      cf::Mutex bloom_lock;
 
 
    

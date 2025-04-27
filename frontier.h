@@ -57,7 +57,7 @@ class ThreadSafeFrontier {
             "forbes",
             "business"
             };
-        const char * fblacklist[10] = {
+        const char * fblacklist[12] = {
             "wn.com",
             "nytimes",
             "=",
@@ -67,7 +67,9 @@ class ThreadSafeFrontier {
             "porn",
             "xxx",
             "spokeo",
-            "freeblack"
+            "freeblack",
+            "kidpf",
+            "pngspot"
         };
         float factor = 0.6;
         //TODO: turn this to false
